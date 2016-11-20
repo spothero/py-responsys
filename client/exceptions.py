@@ -1,0 +1,2 @@
+class ResponsysAPIError(Exception):
+    pass

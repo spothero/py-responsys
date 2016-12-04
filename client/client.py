@@ -147,7 +147,7 @@ class ResponsysClient(object):
         response = self.send_request(method, path)
 
         self._check_for_valid_response(response)
-    
+
     def send_profile_list_merge_request(self, path, merge_key, member_field_names, member_records):
         self._check_for_record_limit_quantity(member_records)
 
@@ -242,9 +242,10 @@ class ResponsysClient(object):
         return response
 
     def _check_for_record_limit_quantity(self, member_records):
-        if len(member_records) > self.RESPONSYS_RECORD_PROCESS_LIMIT_QUANTITY:
-            raise ResponsysClientError('A max of 200 members may be created or updated at '
-                                       'one time.')
+        limit = self.RESPONSYS_RECORD_PROCESS_LIMIT_QUANTITY
+        if len(member_records) > limit:
+            raise ResponsysClientError('A max of {} members may be created or updated at '
+                                       'one time.'.format(limit))
 
     @staticmethod
     def _check_for_valid_response(response, expected_status_code=200):

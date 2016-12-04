@@ -1,4 +1,3 @@
-import logging
 import time
 from datetime import datetime
 from datetime import timedelta
@@ -10,8 +9,6 @@ import requests
 from exceptions import ResponsysClientError
 from utils import convert_to_list_of_dicts
 from utils import convert_to_table_structure
-
-logger = logging.getLogger(__name__)
 
 
 class ResponsysClient(object):
@@ -194,7 +191,6 @@ class ResponsysClient(object):
                                     'Method: {}, URL: {}'.format(method, url))
 
         if not retry and response.status_code == 429:
-            logger.info('This Responsys API call got rate limited: {} {}.'.format(method, url))
             time.sleep(self.RESPONSYS_RATE_LIMIT_WAITING_PERIOD_IN_SECONDS)
 
             response = self._send_request(method, url, headers=headers, retry=True)

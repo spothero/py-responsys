@@ -230,10 +230,10 @@ class ResponsysClient(object):
                                         timeout=self.DEFAULT_REQUEST_TIMEOUT_IN_SECONDS)
         except requests.exceptions.Timeout:
             raise ResponsysClientError('There was a timeout error sending a request to Responsys.'
-                                    'Method: {}, URL: {}'.format(method, url))
+                                       'Method: {}, URL: {}'.format(method, url))
         except Exception:
             raise ResponsysClientError('There was an unknown error sending a request to Responsys.'
-                                    'Method: {}, URL: {}'.format(method, url))
+                                       'Method: {}, URL: {}'.format(method, url))
 
         if not retry and response.status_code == 429:
             time.sleep(self.RESPONSYS_RATE_LIMIT_WAITING_PERIOD_IN_SECONDS)

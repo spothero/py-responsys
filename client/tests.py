@@ -271,7 +271,7 @@ class ResponsysClientTests(TestCase):
 
         self.blank_api_state(api)
 
-    def test_get_profile_contact_lists_failure_generic_500(self):
+    def test_get_profile_lists_failure_generic_500(self):
         api = ResponsysClient()
         self.blank_api_state(api)
 
@@ -281,7 +281,7 @@ class ResponsysClientTests(TestCase):
             mock_request.return_value = response
 
             with self.assertRaises(ResponsysClientError):
-                result = api.get_profile_contact_lists()
+                result = api.get_profile_lists()
 
             self.assertEqual(mock_request.call_count, 1)
 
@@ -305,7 +305,7 @@ class ResponsysClientTests(TestCase):
         with patch.object(requests, 'request') as mock_request:
             mock_request.side_effect = response_sequence
 
-            result = api.get_profile_contact_lists()
+            result = api.get_profile_lists()
 
             self.assertEqual(mock_request.call_count, 3)
 

@@ -13,109 +13,106 @@ from utils import convert_to_table_structure
 
 class ResponsysClient(object):
 
-    AUTH_TOKEN_REFRESH_THRESHOLD = timedelta(hours=1)
-    AUTH_PATH = '/rest/api/v1.1/auth/token'
+    class ResponsysMergeKeys(object):
+        CUSTOMER_ID = 'customer_id_'
+
+    RESPONSYS_AUTH_PATH = '/rest/api/v1.1/auth/token'
     RESPONSYS_RATE_LIMIT_WAITING_PERIOD_IN_SECONDS = 60
     RESPONSYS_INVALID_TOKEN_RESPONSE_DETAIL = 'Not a valid authentication token'
+    RESPONSYS_RECORD_PROCESS_LIMIT_QUANTITY = 200
+
+    AUTH_TOKEN_REFRESH_THRESHOLD = timedelta(hours=1)
     DEFAULT_REQUEST_TIMEOUT_IN_SECONDS = 60
-    RECORD_PROCESS_LIMIT_QUANTITY = 200
 
-    def __init__(self, username=None,
-                 password=None,
-                 login_url=None,
-                 profile_list=None,
-                 folder_name=None,
-                 rental_supp_table=None):
-
+    def __init__(self, username=None, password=None, login_url=None):
         self.username = username
         self.password = password
         self.login_url = login_url
         self.issued_url = None
         self.auth_token = None
         self.refresh_timestamp = None
-        self.profile_list = profile_list
-        self.folder = folder_name
-        self.rental_supp_table = rental_supp_table
 
-    def get_profile_contact_lists(self):
+    def get_profile_lists(self):
         method = 'GET'
         path = '/rest/api/v1.1/lists'
 
         response = self.send_request(method, path)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response)
 
         return response.json()
 
-    def get_extension_tables_lists(self):
+    def get_profile_list_extensions(self, profile_list):
         method = 'GET'
-        path = '/rest/api/v1.1/lists/{}/listExtensions'.format(self.profile_list)
+        path = '/rest/api/v1.1/lists/{}/listExtensions'.format(profile_list)
 
         response = self.send_request(method, path)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response)
 
         return response.json()
 
-    def create_or_update_contact_list_members(self, contact_dicts):
-        member_field_names, member_records = convert_to_table_structure(contact_dicts)
+    def merge_profile_list_members(self, profile_list, profile_dicts,
+                                   merge_key=ResponsysMergeKeys.CUSTOMER_ID):
+        member_field_names, member_records = convert_to_table_structure(profile_dicts)
 
-        path = '/rest/api/v1.1/lists/{}/members'.format(self.profile_list)
+        path = '/rest/api/v1.1/lists/{}/members'.format(profile_list)
 
-        response = self.send_merge_request(path, member_field_names, member_records)
+        response = self.send_profile_list_merge_request(path, merge_key, member_field_names,
+                                                        member_records)
 
-        self._check_for_valid_response(response.request.method, path, response.status_code,
-                                       response.text)
+        self._check_for_valid_response(response)
 
         return response.json()
 
-    def create_or_update_extension_table_members(self, table_name, data_dicts):
+    def merge_profile_list_extension_members(self, profile_list, list_extension, data_dicts,
+                                             merge_key=ResponsysMergeKeys.CUSTOMER_ID):
         member_field_names, member_records = convert_to_table_structure(data_dicts)
 
         path = ('/rest/api/v1.1/lists/{}/listExtensions/{}/members'
-                .format(self.profile_list, table_name))
+                .format(profile_list, list_extension))
 
-        response = self.send_ext_table_merge_request(path, member_field_names, member_records)
+        response = self.send_extension_table_merge_request(path, merge_key, member_field_names,
+                                                           member_records)
 
-        self._check_for_valid_response(response.request.method,
-                                       path, response.status_code, response.text)
+        self._check_for_valid_response(response)
 
         return response.json()
 
-    def create_or_update_supplemental_table_members(self, table_name, data_dicts):
+    def merge_supplemental_table_members(self, folder, table, data_dicts):
         member_field_names, member_records = convert_to_table_structure(data_dicts)
 
         path = ('/rest/api/v1.1/folders/{}/suppData/{}/members'
-                .format(self.folder, table_name))
+                .format(folder, table))
 
-        response = self.send_supp_table_merge_request(path, member_field_names, member_records)
+        response = self.send_supplemental_table_merge_request(path, member_field_names,
+                                                              member_records)
 
-        self._check_for_valid_response(response.request.method, path, response.status_code,
-                                       response.text)
+        self._check_for_valid_response(response)
 
         return response.json()
 
-    def get_contact_list_table_member(self, user_id):
+    def get_profile_list_member(self, profile_list, customer_id):
         method = 'GET'
-        path = '/rest/api/v1.1/lists/{}/members/'.format(self.profile_list)
+        path = '/rest/api/v1.1/lists/{}/members/'.format(profile_list)
         query_by_customer_id_params = {
             'qa': 'c',
-            'id': str(user_id),
+            'id': str(customer_id),
             'fs': 'all'
         }
 
         response = self.send_request(method, path, params=query_by_customer_id_params)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response)
 
         members = self._parse_members(response)
 
         return members[0]
 
-    def get_extension_table_member(self, table_name, user_id):
+    def get_extension_table_member(self, profile_list, list_extension, user_id):
         method = 'GET'
         path = ('/rest/api/v1.1/lists/{}/listExtensions/{}/members'
-                .format(self.profile_list, table_name))
+                .format(profile_list, list_extension))
         query_by_customer_id_params = {
             'qa': 'c',
             'id': str(user_id),
@@ -124,43 +121,90 @@ class ResponsysClient(object):
 
         response = self.send_request(method, path, params=query_by_customer_id_params)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response)
 
         members = self._parse_members(response)
 
         return members[0]
 
-    def delete_contact_list_member(self, user_id):
-        member = self.get_contact_list_table_member(user_id)
+    def delete_profile_list_member(self, profile_list, customer_id):
+        member = self.get_profile_list_member(profile_list, customer_id)
 
         method = 'DELETE'
-        path = '/rest/api/v1.1/lists/{}/members/{}'.format(self.profile_list, member['RIID_'])
+        path = '/rest/api/v1.1/lists/{}/members/{}'.format(profile_list, member['RIID_'])
 
         response = self.send_request(method, path)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response)
 
-    def delete_extension_table_member(self, table_name, user_id):
-        member = self.get_extension_table_member(table_name, user_id)
+    def delete_list_extension_member(self, profile_list, list_extension, customer_id):
+        member = self.get_extension_table_member(profile_list, list_extension, customer_id)
 
         method = 'DELETE'
         path = ('/rest/api/v1.1/lists/{}/listExtensions/{}/members/{}'
-                .format(self.profile_list, table_name, member['RIID_']))
+                .format(profile_list, list_extension, member['RIID_']))
 
         response = self.send_request(method, path)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response)
+    
+    def send_profile_list_merge_request(self, path, merge_key, member_field_names, member_records):
+        self._check_for_record_limit_quantity(member_records)
 
-    @staticmethod
-    def _parse_members(response):
-        parsed_response = response.json()
+        json = {
+            "recordData": {
+                "fieldNames": member_field_names,
+                "records": member_records,
+                "mapTemplateName": None
+            },
+            "mergeRule": {
+                "htmlValue": "H",
+                "optinValue": "I",
+                "textValue": "T",
+                "insertOnNoMatch": True,
+                "updateOnMatch": "REPLACE_ALL",
+                "matchColumnName1": merge_key,
+                "matchColumnName2": None,
+                "matchOperator": "NONE",
+                "optoutValue": "O",
+                "rejectRecordIfChannelEmpty": None,
+                "defaultPermissionStatus": "OPTIN"
+            }
+        }
 
-        field_names = parsed_response['recordData']['fieldNames']
-        records = parsed_response['recordData']['records']
+        return self.send_request('POST', path, json=json)
 
-        members = convert_to_list_of_dicts(field_names, records)
+    def send_extension_table_merge_request(self, path, merge_key, member_field_names,
+                                           member_records):
+        self._check_for_record_limit_quantity(member_records)
 
-        return members
+        json = {
+                "recordData": {
+                    "fieldNames": member_field_names,
+                    "records": member_records,
+                    "mapTemplateName": None
+                },
+                "insertOnNoMatch": True,
+                "updateOnMatch": "REPLACE_ALL",
+                "matchColumnName1": merge_key
+        }
+
+        return self.send_request('POST', path, json=json)
+
+    def send_supplemental_table_merge_request(self, path, member_field_names, member_records):
+        self._check_for_record_limit_quantity(member_records)
+
+        json = {
+                "recordData": {
+                    "fieldNames": member_field_names,
+                    "records": member_records,
+                    "mapTemplateName": None
+                },
+                "insertOnNoMatch": True,
+                "updateOnMatch": "REPLACE_ALL"
+        }
+
+        return self.send_request('POST', path, json=json)
 
     def send_request(self, method, path, params=None, json=None):
         self._get_access_items()
@@ -197,74 +241,21 @@ class ResponsysClient(object):
 
         return response
 
-    def send_merge_request(self, path, member_field_names, member_records):
-        if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
-            raise ResponsysClientError('A max of 200 members may be created or updated at one time.')
-
-        json = {
-                "recordData": {
-                    "fieldNames": member_field_names,
-                    "records": member_records,
-                    "mapTemplateName": None
-                },
-                "mergeRule": {
-                    "htmlValue": "H",
-                    "optinValue": "I",
-                    "textValue": "T",
-                    "insertOnNoMatch": True,
-                    "updateOnMatch": "REPLACE_ALL",
-                    "matchColumnName1": "customer_id_",
-                    "matchColumnName2": None,
-                    "matchOperator": "NONE",
-                    "optoutValue": "O",
-                    "rejectRecordIfChannelEmpty": None,
-                    "defaultPermissionStatus": "OPTIN"
-                }
-               }
-
-        return self.send_request('POST', path, json=json)
-
-    def send_ext_table_merge_request(self, path, member_field_names, member_records):
-        if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
-            raise ResponsysClientError('A max of 200 members may be created or updated at one time.')
-
-        json = {
-                "recordData": {
-                    "fieldNames": member_field_names,
-                    "records": member_records,
-                    "mapTemplateName": None
-                },
-                "insertOnNoMatch": True,
-                "updateOnMatch": "REPLACE_ALL",
-                "matchColumnName1": "CUSTOMER_ID"
-        }
-
-        return self.send_request('POST', path, json=json)
-
-    def send_supp_table_merge_request(self, path, member_field_names, member_records):
-        if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
-            raise ResponsysClientError('A max of 200 members may be created or updated at one time.')
-
-        json = {
-                "recordData": {
-                    "fieldNames": member_field_names,
-                    "records": member_records,
-                    "mapTemplateName": None
-                },
-                "insertOnNoMatch": True,
-                "updateOnMatch": "REPLACE_ALL"
-        }
-
-        return self.send_request('POST', path, json=json)
+    def _check_for_record_limit_quantity(self, member_records):
+        if len(member_records) > self.RESPONSYS_RECORD_PROCESS_LIMIT_QUANTITY:
+            raise ResponsysClientError('A max of 200 members may be created or updated at '
+                                       'one time.')
 
     @staticmethod
-    def _check_for_valid_response(method, path, response_status_code, response_text,
-                                  expected_status_code=200):
-        if response_status_code != expected_status_code:
+    def _check_for_valid_response(response, expected_status_code=200):
+        if response.status_code != expected_status_code:
+            request = response.request
+
             raise ResponsysClientError('There was an issue sending a request to Responsys. '
-                                    'Request Method: {}, Request Path: {}, '
-                                    'Response Status Code: {}. Response Text: {}.'
-                                    .format(method, path, response_status_code, response_text))
+                                       'Request Method: {}. Request Path: {}. Request Body: {}.'
+                                       'Response Status Code: {}. Response Text: {}.'
+                                       .format(request.method, request.path, request.body,
+                                               response.status_code, response.text))
 
     def _is_invalid_token_response(self, response):
         invalid = False
@@ -278,6 +269,17 @@ class ResponsysClient(object):
                     invalid = True
 
         return invalid
+
+    @staticmethod
+    def _parse_members(response):
+        parsed_response = response.json()
+
+        field_names = parsed_response['recordData']['fieldNames']
+        records = parsed_response['recordData']['records']
+
+        members = convert_to_list_of_dicts(field_names, records)
+
+        return members
 
     def _get_access_items(self):
         if not self.auth_token:
@@ -294,7 +296,7 @@ class ResponsysClient(object):
 
     def _login(self):
         method = 'POST'
-        path = self.AUTH_PATH
+        path = self.RESPONSYS_AUTH_PATH
         url = urljoin(self.login_url, path)
         params = {'user_name': self.username,
                   'password': self.password,
@@ -305,14 +307,14 @@ class ResponsysClient(object):
 
         if response.status_code != 200:
             raise ResponsysClientError('There was an issue sending a login request '
-                                    'to Responsys. Status Code: {}. Response Text: {}'
-                                    .format(response.status_code, response.text))
+                                       'to Responsys. Status Code: {}. Response Text: {}'
+                                       .format(response.status_code, response.text))
 
         self._update_access_items(response)
 
     def _refresh_token(self):
         method = 'POST'
-        path = self.AUTH_PATH
+        path = self.RESPONSYS_AUTH_PATH
         params = {'auth_type': 'token'}
         url = urljoin(self.issued_url, path)
         headers = {'Authorization': self.auth_token}

@@ -219,7 +219,8 @@ class ResponsysClient(object):
             self._login()
             headers = {'Authorization': self.auth_token}
 
-            response = self._send_request(method, url, headers=headers, json=json, params=params)
+            response = self._send_request(method, url, headers=headers, json=json, params=params,
+                                          retry=True)
 
         return response
 

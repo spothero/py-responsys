@@ -4,4 +4,4 @@ python:
 # command to install dependencies
 install: "pip install -r requirements.txt"
 # command to run tests
-script: "python -m unittest client.tests"
+script: "python -m unittest py-responsys.tests"

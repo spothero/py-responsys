@@ -8,8 +8,8 @@ import pytz
 import requests
 
 from .exceptions import ResponsysAPIError
-# from third_party.responsys.utils import convert_to_list_of_dicts
-# from third_party.responsys.utils import convert_to_table_structure
+from utils import convert_to_list_of_dicts
+from utils import convert_to_table_structure
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +23,12 @@ class ResponsysAPI(object):
     DEFAULT_REQUEST_TIMEOUT_IN_SECONDS = 60
     RECORD_PROCESS_LIMIT_QUANTITY = 200
 
-    def __init__(self, username=None, password=None, login_url=None, profile_list=None,
-                 supplemental_folder_name=None):
+    def __init__(self, username=None,
+                 password=None,
+                 login_url=None,
+                 profile_list=None,
+                 folder_name=None,
+                 rental_supp_table=None):
 
         self.username = username
         self.password = password
@@ -33,7 +37,8 @@ class ResponsysAPI(object):
         self.auth_token = None
         self.refresh_timestamp = None
         self.profile_list = profile_list
-        self.supplemental_folder_name = supplemental_folder_name
+        self.folder = folder_name
+        self.rental_supp_table = rental_supp_table
 
     def get_profile_contact_lists(self):
         method = 'GET'
@@ -58,39 +63,38 @@ class ResponsysAPI(object):
     def create_or_update_contact_list_members(self, contact_dicts):
         member_field_names, member_records = convert_to_table_structure(contact_dicts)
 
-        method = 'POST'
         path = '/rest/api/v1.1/lists/{}/members'.format(self.profile_list)
 
-        response = self.send_merge_request(method, path, member_field_names, member_records)
+        response = self.send_merge_request(path, member_field_names, member_records)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response.request.method, path, response.status_code,
+                                       response.text)
 
         return response.json()
 
     def create_or_update_extension_table_members(self, table_name, data_dicts):
         member_field_names, member_records = convert_to_table_structure(data_dicts)
 
-        method = 'POST'
         path = ('/rest/api/v1.1/lists/{}/listExtensions/{}/members'
                 .format(self.profile_list, table_name))
 
-        response = self.send_ext_table_merge_request(method, path, member_field_names,
-                                                     member_records)
+        response = self.send_ext_table_merge_request(path, member_field_names, member_records)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response.request.method,
+                                       path, response.status_code, response.text)
 
         return response.json()
 
     def create_or_update_supplemental_table_members(self, table_name, data_dicts):
         member_field_names, member_records = convert_to_table_structure(data_dicts)
 
-        method = 'POST'
         path = ('/rest/api/v1.1/folders/{}/suppData/{}/members'
-                .format(self.supplemental_folder_name, table_name))
+                .format(self.folder, table_name))
 
-        response = self.send_merge_request(method, path, member_field_names, member_records)
+        response = self.send_supp_table_merge_request(path, member_field_names, member_records)
 
-        self._check_for_valid_response(method, path, response.status_code, response.text)
+        self._check_for_valid_response(response.request.method, path, response.status_code,
+                                       response.text)
 
         return response.json()
 
@@ -129,24 +133,6 @@ class ResponsysAPI(object):
 
         return members[0]
 
-    def get_supplemental_table_member(self, table_name, user_id):
-        method = 'GET'
-        path = ('/rest/api/v1.1/folders/{}/suppData/{}/members'
-                .format(self.supplemental_folder_name, table_name))
-        query_by_customer_id_params = {
-            'qa': 'CUSTOMER_ID_',
-            'id': str(user_id),
-            'fs': 'all'
-        }
-
-        response = self.send_request(method, path, params=query_by_customer_id_params)
-
-        self._check_for_valid_response(method, path, response.status_code, response.text)
-
-        members = self._parse_members(response)
-
-        return members[0]
-
     def delete_contact_list_member(self, user_id):
         member = self.get_contact_list_table_member(user_id)
 
@@ -165,20 +151,6 @@ class ResponsysAPI(object):
                 .format(self.profile_list, table_name, member['RIID_']))
 
         response = self.send_request(method, path)
-
-        self._check_for_valid_response(method, path, response.status_code, response.text)
-
-    def delete_supplemental_table_member(self, table_name, user_id):
-        method = 'DELETE'
-        path = ('/rest/api/v1.1/lists/folders/{}/suppData/{}/members'
-                .format(self.supplemental_folder_name, table_name))
-
-        delete_by_customer_id_params = {
-            'qa': 'CUSTOMER_ID_',
-            'id': str(user_id)
-        }
-
-        response = self.send_request(method, path, params=delete_by_customer_id_params)
 
         self._check_for_valid_response(method, path, response.status_code, response.text)
 
@@ -229,7 +201,7 @@ class ResponsysAPI(object):
 
         return response
 
-    def send_merge_request(self, method, path, member_field_names, member_records):
+    def send_merge_request(self, path, member_field_names, member_records):
         if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
             raise ResponsysAPIError('A max of 200 members may be created or updated at one time.')
 
@@ -254,9 +226,9 @@ class ResponsysAPI(object):
                 }
                }
 
-        return self.send_request(method, path, json=json)
+        return self.send_request('POST', path, json=json)
 
-    def send_ext_table_merge_request(self, method, path, member_field_names, member_records):
+    def send_ext_table_merge_request(self, path, member_field_names, member_records):
         if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
             raise ResponsysAPIError('A max of 200 members may be created or updated at one time.')
 
@@ -271,7 +243,23 @@ class ResponsysAPI(object):
                 "matchColumnName1": "CUSTOMER_ID"
         }
 
-        return self.send_request(method, path, json=json)
+        return self.send_request('POST', path, json=json)
+
+    def send_supp_table_merge_request(self, path, member_field_names, member_records):
+        if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
+            raise ResponsysAPIError('A max of 200 members may be created or updated at one time.')
+
+        json = {
+                "recordData": {
+                    "fieldNames": member_field_names,
+                    "records": member_records,
+                    "mapTemplateName": None
+                },
+                "insertOnNoMatch": True,
+                "updateOnMatch": "REPLACE_ALL"
+        }
+
+        return self.send_request('POST', path, json=json)
 
     @staticmethod
     def _check_for_valid_response(method, path, response_status_code, response_text,

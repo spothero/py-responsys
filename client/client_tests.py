@@ -11,33 +11,42 @@ from client import ResponsysAPI
 from client import ResponsysAPIError
 
 
-class MockResponse200(object):
+class MockResponseBase(object):
+
+    class MockRequest(object):
+        body = ''
+
+    def json(self):
+        return {}
+
+    @property
+    def request(self):
+        return self.MockRequest()
+
+
+class MockResponse200(MockResponseBase):
     status_code = 200
     text = 'OK'
 
-    @staticmethod
-    def json():
-        return {}
 
-
-class MockResponse400(object):
+class MockResponse400(MockResponseBase):
     status_code = 400
     text = ('{"type":"","title":"Invalid username or password","errorCode":'
             '"INVALID_USER_NAME_PASSWORD","detail":"Login failed","errorDetails":[]}')
 
 
-class MockResponse401(object):
+class MockResponse401(MockResponseBase):
     status_code = 401
     text = ('{"type":"","title":"Authentication token expired","errorCode":'
             '"TOKEN_EXPIRED","detail":"Token expired","errorDetails":[]}')
 
 
-class MockResponseRateLimit429(object):
+class MockResponseRateLimit429(MockResponseBase):
     status_code = 429
     text = 'you got rate limited'
 
 
-class MockResponseInvalidToken500(object):
+class MockResponseInvalidToken500(MockResponseBase):
     status_code = 500
     text = ('{"type":"","title":"Unexpected exception","errorCode":"UNEXPECTED_EXCEPTION",'
             '"detail":"Not a valid authentication token","errorDetails":[]}')
@@ -46,7 +55,7 @@ class MockResponseInvalidToken500(object):
         return json.loads(self.text)
 
 
-class MockResponseGeneric500(object):
+class MockResponseGeneric500(MockResponseBase):
     status_code = 500
     text = ('{"type":"","title":"Unexpected exception","errorCode":"UNEXPECTED_EXCEPTION",'
             '"detail":"Error on the backend","errorDetails":[]}')
@@ -59,11 +68,10 @@ class ResponsysAPITests(TestCase):
 
     @staticmethod
     def get_mock_auth_success_response_200(auth_token, issued_endpoint, timestamp_js):
-        class MockResponse(object):
+        class MockResponse(MockResponseBase):
             status_code = 200
 
-            @staticmethod
-            def json():
+            def json(self):
                 return {u'authToken': auth_token,
                         u'endPoint': issued_endpoint,
                         u'issuedAt': timestamp_js}

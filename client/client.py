@@ -7,14 +7,14 @@ from urlparse import urljoin
 import pytz
 import requests
 
-from .exceptions import ResponsysAPIError
+from exceptions import ResponsysClientError
 from utils import convert_to_list_of_dicts
 from utils import convert_to_table_structure
 
 logger = logging.getLogger(__name__)
 
 
-class ResponsysAPI(object):
+class ResponsysClient(object):
 
     AUTH_TOKEN_REFRESH_THRESHOLD = timedelta(hours=1)
     AUTH_PATH = '/rest/api/v1.1/auth/token'
@@ -187,10 +187,10 @@ class ResponsysAPI(object):
             response = requests.request(method, url, params=params, json=json, headers=headers,
                                         timeout=self.DEFAULT_REQUEST_TIMEOUT_IN_SECONDS)
         except requests.exceptions.Timeout:
-            raise ResponsysAPIError('There was a timeout error sending a request to Responsys.'
+            raise ResponsysClientError('There was a timeout error sending a request to Responsys.'
                                     'Method: {}, URL: {}'.format(method, url))
         except Exception:
-            raise ResponsysAPIError('There was an unknown error sending a request to Responsys.'
+            raise ResponsysClientError('There was an unknown error sending a request to Responsys.'
                                     'Method: {}, URL: {}'.format(method, url))
 
         if not retry and response.status_code == 429:
@@ -203,7 +203,7 @@ class ResponsysAPI(object):
 
     def send_merge_request(self, path, member_field_names, member_records):
         if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
-            raise ResponsysAPIError('A max of 200 members may be created or updated at one time.')
+            raise ResponsysClientError('A max of 200 members may be created or updated at one time.')
 
         json = {
                 "recordData": {
@@ -230,7 +230,7 @@ class ResponsysAPI(object):
 
     def send_ext_table_merge_request(self, path, member_field_names, member_records):
         if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
-            raise ResponsysAPIError('A max of 200 members may be created or updated at one time.')
+            raise ResponsysClientError('A max of 200 members may be created or updated at one time.')
 
         json = {
                 "recordData": {
@@ -247,7 +247,7 @@ class ResponsysAPI(object):
 
     def send_supp_table_merge_request(self, path, member_field_names, member_records):
         if len(member_records) > self.RECORD_PROCESS_LIMIT_QUANTITY:
-            raise ResponsysAPIError('A max of 200 members may be created or updated at one time.')
+            raise ResponsysClientError('A max of 200 members may be created or updated at one time.')
 
         json = {
                 "recordData": {
@@ -265,7 +265,7 @@ class ResponsysAPI(object):
     def _check_for_valid_response(method, path, response_status_code, response_text,
                                   expected_status_code=200):
         if response_status_code != expected_status_code:
-            raise ResponsysAPIError('There was an issue sending a request to Responsys. '
+            raise ResponsysClientError('There was an issue sending a request to Responsys. '
                                     'Request Method: {}, Request Path: {}, '
                                     'Response Status Code: {}. Response Text: {}.'
                                     .format(method, path, response_status_code, response_text))
@@ -308,7 +308,7 @@ class ResponsysAPI(object):
         response = self._send_request(method, url, params=params, headers=headers)
 
         if response.status_code != 200:
-            raise ResponsysAPIError('There was an issue sending a login request '
+            raise ResponsysClientError('There was an issue sending a login request '
                                     'to Responsys. Status Code: {}. Response Text: {}'
                                     .format(response.status_code, response.text))
 

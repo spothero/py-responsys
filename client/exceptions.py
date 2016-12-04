@@ -1,2 +1,2 @@
-class ResponsysAPIError(Exception):
+class ResponsysClientError(Exception):
     pass

@@ -7,8 +7,8 @@ import pytz
 import requests
 from mock import patch
 
-from client import ResponsysAPI
-from client import ResponsysAPIError
+from client import ResponsysClient
+from client import ResponsysClientError
 
 
 class MockResponseBase(object):
@@ -64,7 +64,7 @@ class MockResponseGeneric500(MockResponseBase):
         return json.loads(self.text)
 
 
-class ResponsysAPITests(TestCase):
+class ResponsysClientTests(TestCase):
 
     @staticmethod
     def get_mock_auth_success_response_200(auth_token, issued_endpoint, timestamp_js):
@@ -89,7 +89,7 @@ class ResponsysAPITests(TestCase):
         timestamp_js = 1476401899277
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         with patch.object(requests, 'request') as mock_request:
@@ -104,26 +104,26 @@ class ResponsysAPITests(TestCase):
         self.assertEqual(api.refresh_timestamp, timestamp_datetime)
 
     def test_login_failure(self):
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         with patch.object(requests, 'request') as mock_request:
             mock_request.return_value = MockResponse400()
 
-            with self.assertRaises(ResponsysAPIError):
+            with self.assertRaises(ResponsysClientError):
                 result = api._login()
 
         self.blank_api_state(api)
 
     def test_login_failure_continuous_rate_limiting(self):
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         api.RESPONSYS_RATE_LIMIT_WAITING_PERIOD_IN_SECONDS = 0
 
         with patch.object(requests, 'request') as mock_request:
             mock_request.return_value = MockResponseRateLimit429()
-            with self.assertRaises(ResponsysAPIError):
+            with self.assertRaises(ResponsysClientError):
                 result = api._login()
 
         self.blank_api_state(api)
@@ -134,7 +134,7 @@ class ResponsysAPITests(TestCase):
         timestamp_js = 1476401899277
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         with patch.object(requests, 'request') as mock_request:
@@ -154,7 +154,7 @@ class ResponsysAPITests(TestCase):
         timestamp_js = 1476401899277
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         response_1 = MockResponse401()
@@ -179,7 +179,7 @@ class ResponsysAPITests(TestCase):
         timestamp_js = 1476401899277
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         response_1 = MockResponseInvalidToken500()
@@ -199,13 +199,13 @@ class ResponsysAPITests(TestCase):
         self.assertEqual(api.refresh_timestamp, timestamp_datetime)
 
     def test_refresh_token_failure_double_500(self):
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         with patch.object(requests, 'request') as mock_request:
             mock_request.return_value = MockResponseInvalidToken500()
 
-            with self.assertRaises(ResponsysAPIError):
+            with self.assertRaises(ResponsysClientError):
                 result = api._refresh_token()
 
         self.blank_api_state(api)
@@ -213,7 +213,7 @@ class ResponsysAPITests(TestCase):
     def test_time_to_refresh_true(self):
         now = datetime.utcnow().replace(tzinfo=pytz.utc)
 
-        api = ResponsysAPI()
+        api = ResponsysClient()
         api.auth_token = '34oiuh4f9j34f4v3'
         api.refresh_timestamp = now - timedelta(hours=1, minutes=1)
 
@@ -222,7 +222,7 @@ class ResponsysAPITests(TestCase):
     def test_time_to_refresh_false(self):
         now = datetime.utcnow().replace(tzinfo=pytz.utc)
 
-        api = ResponsysAPI()
+        api = ResponsysClient()
         api.auth_token = '34oiuh4f9j34f4v3'
         api.refresh_timestamp = now - timedelta(minutes=59)
 
@@ -234,7 +234,7 @@ class ResponsysAPITests(TestCase):
         timestamp_js = 1476401899277
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         with patch.object(requests, 'request') as mock_request:
@@ -248,31 +248,31 @@ class ResponsysAPITests(TestCase):
         self.assertEqual(api.refresh_timestamp, timestamp_datetime)
 
     def test_except_timeout_exception(self):
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         with patch.object(requests, 'request') as mock_request:
             mock_request.side_effect = requests.exceptions.Timeout()
 
-            with self.assertRaises(ResponsysAPIError):
+            with self.assertRaises(ResponsysClientError):
                 api._login()
 
         self.blank_api_state(api)
 
     def test_except_generic_exception(self):
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         with patch.object(requests, 'request') as mock_request:
             mock_request.side_effect = Exception()
 
-            with self.assertRaises(ResponsysAPIError):
+            with self.assertRaises(ResponsysClientError):
                 api._login()
 
         self.blank_api_state(api)
 
     def test_get_profile_contact_lists_failure_generic_500(self):
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
 
         response = MockResponseGeneric500()
@@ -280,7 +280,7 @@ class ResponsysAPITests(TestCase):
         with patch.object(requests, 'request') as mock_request:
             mock_request.return_value = response
 
-            with self.assertRaises(ResponsysAPIError):
+            with self.assertRaises(ResponsysClientError):
                 result = api.get_profile_contact_lists()
 
             self.assertEqual(mock_request.call_count, 1)
@@ -290,7 +290,7 @@ class ResponsysAPITests(TestCase):
         issued_endpoint = u'https://api2-018.responsys.net'
         timestamp_js = 1476401899277
 
-        api = ResponsysAPI()
+        api = ResponsysClient()
         self.blank_api_state(api)
         api.auth_token = 'cpowdij34023'
         api.refresh_timestamp = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
@@ -310,6 +310,6 @@ class ResponsysAPITests(TestCase):
             self.assertEqual(mock_request.call_count, 3)
 
     def test_is_invalid_token_response(self):
-        api = ResponsysAPI()
+        api = ResponsysClient()
         response = MockResponseInvalidToken500()
         self.assertTrue(api._is_invalid_token_response(response))

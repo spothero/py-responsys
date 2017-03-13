@@ -26,7 +26,3 @@ from responsys_client import ResponsysClient
 client = ResponsysClient(username='your_username', password='your_password', login_url='your_login_url')
 client.get_profile_lists()
 ```
-
-## Note
-At the moment, the Getting Started Section does not work and has been noted here: https://github.com/spothero/py-responsys/issues/2 
-=> Plans are in the works to get this fixed.

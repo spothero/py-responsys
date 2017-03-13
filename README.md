@@ -17,8 +17,12 @@ password and login url. Once this is complete, you may begin using the public me
 with the profile lists, extension tables and supplemental tables. An example of this is shown
 below:
 
+```bash
+pip install responsys_client
+```
+
 ```python
-from client import ResponsysClient
+from responsys_client import ResponsysClient
 client = ResponsysClient(username='your_username', password='your_password', login_url='your_login_url')
 client.get_profile_lists()
 ```

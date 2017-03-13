@@ -1,7 +1,8 @@
 from distutils.core import setup
+
 setup(
-  name='py-responsys',
-  packages=['py-responsys'],  # this must be the same as the name above
+  name='responsys_client',
+  packages=['responsys_client'],  # this must be the same as the name above
   version='0.1.4',
   description='This is an Oracle Responsys REST API client written in Python 2.7.',
   author='Nicholas Kincaid',

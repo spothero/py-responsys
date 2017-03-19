@@ -256,7 +256,7 @@ class ResponsysClient(object):
             raise ResponsysClientError('There was an issue sending a request to Responsys. '
                                        'Request Method: {}. Request Path: {}. Request Body: {}.'
                                        'Response Status Code: {}. Response Text: {}.'
-                                       .format(request.method, request.path, request.body,
+                                       .format(request.method, request.path_url, request.body,
                                                response.status_code, response.text))
 
     def _is_invalid_token_response(self, response):

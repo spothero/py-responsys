@@ -13,9 +13,6 @@ from utils import convert_to_table_structure
 
 class ResponsysClient(object):
 
-    class ResponsysMergeKeys(object):
-        CUSTOMER_ID = 'customer_id_'
-
     RESPONSYS_AUTH_PATH = '/rest/api/v1.1/auth/token'
     RESPONSYS_RATE_LIMIT_WAITING_PERIOD_IN_SECONDS = 60
     RESPONSYS_INVALID_TOKEN_RESPONSE_DETAIL = 'Not a valid authentication token'
@@ -52,8 +49,7 @@ class ResponsysClient(object):
 
         return response.json()
 
-    def merge_profile_list_members(self, profile_list, profile_dicts,
-                                   merge_key=ResponsysMergeKeys.CUSTOMER_ID):
+    def merge_profile_list_members(self, profile_list, profile_dicts, merge_key):
         member_field_names, member_records = convert_to_table_structure(profile_dicts)
 
         path = '/rest/api/v1.1/lists/{}/members'.format(profile_list)
@@ -66,7 +62,7 @@ class ResponsysClient(object):
         return response.json()
 
     def merge_profile_list_extension_members(self, profile_list, list_extension, data_dicts,
-                                             merge_key=ResponsysMergeKeys.CUSTOMER_ID):
+                                             merge_key):
         member_field_names, member_records = convert_to_table_structure(data_dicts)
 
         path = ('/rest/api/v1.1/lists/{}/listExtensions/{}/members'

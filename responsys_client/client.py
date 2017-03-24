@@ -220,6 +220,14 @@ class ResponsysClient(object):
 
         return response
 
+    def unsubscribe_list_member(self, profile_list, customer_id):
+        profile_dict = {
+            'CUSTOMER_ID_': str(customer_id),
+            'EMAIL_PERMISSION_STATUS_': 'O',
+        }
+        response = self.merge_profile_list_members(profile_list, [profile_dict], 'CUSTOMER_ID_')
+        return response
+
     def _send_request(self, method, url, params=None, json=None, headers=None, retry=False):
         try:
             response = requests.request(method, url, params=params, json=json, headers=headers,
@@ -335,11 +343,3 @@ class ResponsysClient(object):
         self.refresh_timestamp = utc_timestamp
         self.auth_token = parsed_response['authToken']
         self.issued_url = parsed_response['endPoint']
-
-    def unsubscribe_list_member(self, profile_list, customer_id):
-        profile_dict = {
-            'CUSTOMER_ID_': str(customer_id),
-            'EMAIL_PERMISSION_STATUS_': 'O',
-        }
-        response = self.merge_profile_list_members(profile_list, [profile_dict], 'CUSTOMER_ID_')
-        return response

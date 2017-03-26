@@ -26,3 +26,9 @@ from responsys_client import ResponsysClient
 client = ResponsysClient(username='your_username', password='your_password', login_url='your_login_url')
 client.get_profile_lists()
 ```
+
+## Tests
+In order to run tests, run the following command:
+```python
+python -m unittest responsys_client.tests
+```

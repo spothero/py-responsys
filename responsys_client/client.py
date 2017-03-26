@@ -21,7 +21,7 @@ class ResponsysClient(object):
     AUTH_TOKEN_REFRESH_THRESHOLD = timedelta(hours=1)
     DEFAULT_REQUEST_TIMEOUT_IN_SECONDS = 60
 
-    def __init__(self, username=None, password=None, login_url=None):
+    def __init__(self, username, password, login_url):
         self.username = username
         self.password = password
         self.login_url = login_url
@@ -227,9 +227,9 @@ class ResponsysClient(object):
         except requests.exceptions.Timeout:
             raise ResponsysClientError('There was a timeout error sending a request to Responsys.'
                                        'Method: {}, URL: {}'.format(method, url))
-        except Exception:
-            raise ResponsysClientError('There was an unknown error sending a request to Responsys.'
-                                       'Method: {}, URL: {}'.format(method, url))
+        # except Exception:
+        #     raise ResponsysClientError('There was an unknown error sending a request to Responsys.'
+        #                                'Method: {}, URL: {}'.format(method, url))
 
         if not retry and response.status_code == 429:
             time.sleep(self.RESPONSYS_RATE_LIMIT_WAITING_PERIOD_IN_SECONDS)

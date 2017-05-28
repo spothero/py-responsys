@@ -15,3 +15,14 @@ def convert_to_table_structure(list_of_dicts):
         data_rows.append(data_row)
 
     return header_row, data_rows
+
+
+def split_dict(data):
+    headers = []
+    values = []
+
+    for key, value in data.items():
+        headers.append(key)
+        values.append(value)
+
+    return headers, values

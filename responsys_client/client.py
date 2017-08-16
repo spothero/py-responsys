@@ -7,8 +7,7 @@ import pytz
 import requests
 
 from exceptions import ResponsysClientError
-from utils import convert_to_list_of_dicts
-from utils import convert_to_table_structure
+from utils import convert_to_list_of_dicts, convert_to_table_structure, split_dict
 
 
 class ResponsysClient(object):
@@ -72,6 +71,22 @@ class ResponsysClient(object):
                                                            member_records)
 
         self._check_for_valid_response(response)
+
+        return response.json()
+
+    def get_supplemental_table_members(self, folder, table, primary_keys, fields=('all',)):
+        pk_names, pk_values = split_dict(primary_keys)
+
+        method = 'GET'
+        path = ('/rest/api/v1.1/folders/{}/suppData/{}/members'
+                .format(folder, table))
+        params = {
+            'fs': ','.join(fields),
+            'qa': pk_names,
+            'id': pk_values,
+        }
+
+        response = self.send_request(method, path, params=params)
 
         return response.json()
 

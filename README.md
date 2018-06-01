@@ -5,7 +5,7 @@ This repository houses an api client, ResponsysClient, for use with the Oracle R
 API. Documentation for REST API itself can be found here:
 http://docs.oracle.com/cloud/latest/marketingcs_gs/OMCEB/OMCEB.pdf.
 
-This implementation is written in Python 2.7.
+This implementation is written in Python 2.7 and has been adapted for Python 3.
 
 The ResponsysClient takes care of authentication and throttling on all public methods. In
 addition, the methods dealing with retrieving and merging data deal with dictionaries and lists of

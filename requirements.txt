@@ -1,4 +1,4 @@
-pytz==2016.7
+pytz==2018.4
 requests==2.18.4
 funcsigs==1.0.2
 mock==2.0.0

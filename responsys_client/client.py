@@ -1,7 +1,12 @@
 import time
 from datetime import datetime
 from datetime import timedelta
-from urlparse import urljoin
+import sys
+
+if sys.version_info >= (3,0):
+    from urllib.parse import urljoin
+else:
+    from urlparse import urljoin
 
 import pytz
 import requests

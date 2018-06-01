@@ -12,7 +12,6 @@ from client import ResponsysClientError
 
 
 class MockResponseBase(object):
-
     class MockRequest(object):
         body = ''
 
@@ -92,7 +91,7 @@ class ResponsysClientTests(TestCase):
     def test_login_success(self):
         auth_token = u'E1sB4M4PSXHCDuXwnzJeGoiHo2RSs'
         issued_endpoint = u'https://api2-018.responsys.net'
-        timestamp_js = 1476401899277
+        timestamp_js = 1476401899000
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
         api = self.client
@@ -105,9 +104,9 @@ class ResponsysClientTests(TestCase):
             result = api._login()
             self.assertIsNone(result)
 
-        self.assertEqual(api.auth_token, auth_token)
-        self.assertEqual(api.issued_url, issued_endpoint)
-        self.assertEqual(api.refresh_timestamp, timestamp_datetime)
+        self.assertEqual(auth_token, api.auth_token)
+        self.assertEqual(issued_endpoint, api.issued_url)
+        self.assertEqual(timestamp_datetime, api.refresh_timestamp)
 
     def test_login_failure(self):
         api = self.client
@@ -137,7 +136,7 @@ class ResponsysClientTests(TestCase):
     def test_refresh_token_success(self):
         auth_token = u'E1sB4M4PSXHCDuXwnzJeGoiHo2RSs'
         issued_endpoint = u'https://api2-018.responsys.net'
-        timestamp_js = 1476401899277
+        timestamp_js = 1476401899000
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
         api = self.client
@@ -150,14 +149,14 @@ class ResponsysClientTests(TestCase):
             result = api._refresh_token()
             self.assertIsNone(result)
 
-        self.assertEqual(api.auth_token, auth_token)
-        self.assertEqual(api.issued_url, issued_endpoint)
-        self.assertEqual(api.refresh_timestamp, timestamp_datetime)
+        self.assertEqual(auth_token, api.auth_token)
+        self.assertEqual(issued_endpoint, api.issued_url)
+        self.assertEqual(timestamp_datetime, api.refresh_timestamp)
 
     def test_refresh_token_success_expired_token(self):
         auth_token = u'E1sB4M4PSXHCDuXwnzJeGoiHo2RSs'
         issued_endpoint = u'https://api2-018.responsys.net'
-        timestamp_js = 1476401899277
+        timestamp_js = 1476401899000
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
         api = self.client
@@ -175,14 +174,14 @@ class ResponsysClientTests(TestCase):
 
             self.assertEqual(mock_request.call_count, 2)
 
-        self.assertEqual(api.auth_token, auth_token)
-        self.assertEqual(api.issued_url, issued_endpoint)
-        self.assertEqual(api.refresh_timestamp, timestamp_datetime)
+        self.assertEqual(auth_token, api.auth_token)
+        self.assertEqual(issued_endpoint, api.issued_url)
+        self.assertEqual(timestamp_datetime, api.refresh_timestamp)
 
     def test_refresh_token_success_invalid_token(self):
         auth_token = u'E1sB4M4PSXHCDuXwnzJeGoiHo2RSs'
         issued_endpoint = u'https://api2-018.responsys.net'
-        timestamp_js = 1476401899277
+        timestamp_js = 1476401899000
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
         api = self.client
@@ -200,9 +199,9 @@ class ResponsysClientTests(TestCase):
 
             self.assertEqual(mock_request.call_count, 2)
 
-        self.assertEqual(api.auth_token, auth_token)
-        self.assertEqual(api.issued_url, issued_endpoint)
-        self.assertEqual(api.refresh_timestamp, timestamp_datetime)
+        self.assertEqual(auth_token, api.auth_token)
+        self.assertEqual(issued_endpoint, api.issued_url)
+        self.assertEqual(timestamp_datetime, api.refresh_timestamp)
 
     def test_refresh_token_failure_double_500(self):
         api = self.client
@@ -237,7 +236,7 @@ class ResponsysClientTests(TestCase):
     def test_get_access_items_login_success(self):
         auth_token = u'E1sB4M4PSXHCDuXwnzJeGoiHo2RSs'
         issued_endpoint = u'https://api2-018.responsys.net'
-        timestamp_js = 1476401899277
+        timestamp_js = 1476401899000
         timestamp_datetime = datetime(2016, 10, 13, 23, 38, 19, tzinfo=pytz.utc)
 
         api = self.client
@@ -249,9 +248,9 @@ class ResponsysClientTests(TestCase):
                                                                                 timestamp_js)
             api._get_access_items()
 
-        self.assertEqual(api.auth_token, auth_token)
-        self.assertEqual(api.issued_url, issued_endpoint)
-        self.assertEqual(api.refresh_timestamp, timestamp_datetime)
+        self.assertEqual(auth_token, api.auth_token)
+        self.assertEqual(issued_endpoint, api.issued_url)
+        self.assertEqual(timestamp_datetime, api.refresh_timestamp)
 
     def test_except_timeout_exception(self):
         api = self.client
@@ -289,12 +288,12 @@ class ResponsysClientTests(TestCase):
             with self.assertRaises(ResponsysClientError):
                 result = api.get_profile_lists()
 
-            self.assertEqual(mock_request.call_count, 1)
+            self.assertEqual(1, mock_request.call_count)
 
     def test_get_profile_contact_lists_success_initial_invalid_token(self):
         auth_token = u'E1sB4M4PSXHCDuXwnzJeGoiHo2RSs'
         issued_endpoint = u'https://api2-018.responsys.net'
-        timestamp_js = 1476401899277
+        timestamp_js = 1476401899000
 
         api = self.client
         self.blank_api_state(api)
@@ -313,7 +312,7 @@ class ResponsysClientTests(TestCase):
 
             result = api.get_profile_lists()
 
-            self.assertEqual(mock_request.call_count, 3)
+            self.assertEqual(3, mock_request.call_count)
 
     def test_is_invalid_token_response(self):
         api = self.client

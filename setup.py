@@ -3,9 +3,9 @@ from setuptools import setup
 setup(
     name='responsys_client',
     packages=['responsys_client'],  # this must be the same as the name above
-    version='0.2.1',
+    version='0.2.2',
     install_requires=[
-        'pytz==2016.7',
+        'pytz==2018.4',
         'requests==2.18.4',
         'mock==2.0.0',
     ],

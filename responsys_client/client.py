@@ -11,8 +11,8 @@ else:
 import pytz
 import requests
 
-from exceptions import ResponsysClientError
-from utils import convert_to_list_of_dicts, convert_to_table_structure, split_dict
+from .exceptions import ResponsysClientError
+from .utils import convert_to_list_of_dicts, convert_to_table_structure, split_dict
 
 
 class ResponsysClient(object):

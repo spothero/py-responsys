@@ -7,8 +7,8 @@ import pytz
 import requests
 from mock import patch
 
-from client import ResponsysClient
-from client import ResponsysClientError
+from .client import ResponsysClient
+from .exceptions import ResponsysClientError
 
 
 class MockResponseBase(object):

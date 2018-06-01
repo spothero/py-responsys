@@ -6,7 +6,7 @@ setup(
     version='0.1.8',
     install_requires=[
         'pytz==2016.7',
-        'requests==2.12.0',
+        'requests==2.18.4',
         'mock==2.0.0',
     ],
     description='This is an Oracle Responsys REST API client written in Python 2.7.',

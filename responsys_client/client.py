@@ -1,9 +1,10 @@
+import sys
 import time
+
 from datetime import datetime
 from datetime import timedelta
-import sys
 
-if sys.version_info >= (3,0):
+if sys.version_info >= (3, 0):
     from urllib.parse import urljoin
 else:
     from urlparse import urljoin
@@ -16,7 +17,6 @@ from .utils import convert_to_list_of_dicts, convert_to_table_structure, split_d
 
 
 class ResponsysClient(object):
-
     RESPONSYS_AUTH_PATH = '/rest/api/v1.1/auth/token'
     RESPONSYS_RATE_LIMIT_WAITING_PERIOD_IN_SECONDS = 60
     RESPONSYS_INVALID_TOKEN_RESPONSE_DETAIL = 'Not a valid authentication token'
@@ -95,14 +95,14 @@ class ResponsysClient(object):
 
         return response.json()
 
-    def merge_supplemental_table_members(self, folder, table, data_dicts):
+    def merge_supplemental_table_members(self, folder, table, data_dicts, match_key=None):
         member_field_names, member_records = convert_to_table_structure(data_dicts)
 
         path = ('/rest/api/v1.1/folders/{}/suppData/{}/members'
                 .format(folder, table))
 
         response = self.send_supplemental_table_merge_request(path, member_field_names,
-                                                              member_records)
+                                                              member_records, match_key)
 
         self._check_for_valid_response(response)
 
@@ -195,29 +195,30 @@ class ResponsysClient(object):
         self._check_for_record_limit_quantity(member_records)
 
         json = {
-                "recordData": {
-                    "fieldNames": member_field_names,
-                    "records": member_records,
-                    "mapTemplateName": None
-                },
-                "insertOnNoMatch": True,
-                "updateOnMatch": "REPLACE_ALL",
-                "matchColumnName1": merge_key
+            "recordData": {
+                "fieldNames": member_field_names,
+                "records": member_records,
+                "mapTemplateName": None
+            },
+            "insertOnNoMatch": True,
+            "updateOnMatch": "REPLACE_ALL",
+            "matchColumnName1": merge_key
         }
 
         return self.send_request('POST', path, json=json)
 
-    def send_supplemental_table_merge_request(self, path, member_field_names, member_records):
+    def send_supplemental_table_merge_request(self, path, member_field_names, member_records, match_key=None):
         self._check_for_record_limit_quantity(member_records)
 
         json = {
-                "recordData": {
-                    "fieldNames": member_field_names,
-                    "records": member_records,
-                    "mapTemplateName": None
-                },
-                "insertOnNoMatch": True,
-                "updateOnMatch": "REPLACE_ALL"
+            "recordData": {
+                "fieldNames": member_field_names,
+                "records": member_records,
+                "mapTemplateName": None
+            },
+            "matchColumnNames": [match_key],
+            "insertOnNoMatch": True,
+            "updateOnMatch": "REPLACE_ALL"
         }
 
         return self.send_request('POST', path, json=json)
@@ -255,7 +256,7 @@ class ResponsysClient(object):
         except requests.exceptions.Timeout:
             raise ResponsysClientError('There was a timeout error sending a request to Responsys.'
                                        'Method: {}, URL: {}'.format(method, url))
-       
+
         if not retry and response.status_code == 429:
             time.sleep(self.RESPONSYS_RATE_LIMIT_WAITING_PERIOD_IN_SECONDS)
 
@@ -354,7 +355,7 @@ class ResponsysClient(object):
         parsed_response = response.json()
 
         # this comes back in javascript format and must be converted
-        unaware_timestamp = datetime.utcfromtimestamp(parsed_response['issuedAt']/1000)
+        unaware_timestamp = datetime.utcfromtimestamp(parsed_response['issuedAt'] / 1000)
         utc_timestamp = unaware_timestamp.replace(tzinfo=pytz.UTC)
 
         self.refresh_timestamp = utc_timestamp

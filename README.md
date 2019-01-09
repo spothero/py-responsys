@@ -1,5 +1,7 @@
 # py-responsys
 
+**UNSUPPORTED: This project is unsupported.**
+
 ## Overview
 This repository houses an api client, ResponsysClient, for use with the Oracle Responsys v1.1 REST
 API. Documentation for REST API itself can be found here:
